@@ -291,13 +291,13 @@
             <div class="modal-content" style="background: black; border: none;">
                 <div class="modal-body p-0 position-relative" style="overflow: hidden;">
                     <!-- Ghost Image (will appear suddenly) -->
-                    <img id="ghostImage" src="https://i.imgur.com/xkMbPqK.gif" 
-                         style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 9999;"
+                    <img id="ghostImage" src="https://i.pinimg.com/originals/c0/7f/97/c07f97f3234f1820d0388f1a62377a9a.gif" 
+                         style="display: none; width: 100%; height: 100vh; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 9999; background: black;"
                          alt="ghost">
                     
-                    <!-- Scary Sound -->
-                    <audio id="screamSound" preload="auto">
-                        <source src="https://www.soundjay.com/misc/sounds/scream-1.mp3" type="audio/mpeg">
+                    <!-- Scary Scream Sound -->
+                    <audio id="screamSound" preload="auto" volume="1.0">
+                        <source src="https://www.myinstants.com/media/sounds/female-scream.mp3" type="audio/mpeg">
                     </audio>
                     
                     <!-- Normal Thank You (shows after jumpscare) -->
@@ -413,26 +413,30 @@
                     const modal = new bootstrap.Modal(document.getElementById('thankYouModal'));
                     modal.show();
                     
-                    // Trigger jumpscare after 1 second
+                    // Trigger jumpscare after short delay
                     setTimeout(() => {
                         const ghostImage = document.getElementById('ghostImage');
                         const screamSound = document.getElementById('screamSound');
                         const normalThankYou = document.getElementById('normalThankYou');
+                        
+                        // Set volume to max
+                        screamSound.volume = 1.0;
                         
                         // Show ghost and play scream
                         ghostImage.style.display = 'block';
                         screamSound.play().catch(e => console.log('Audio play failed:', e));
                         
                         // Shake effect
-                        document.body.style.animation = 'shake 0.5s';
+                        document.body.style.animation = 'shake 0.5s infinite';
                         
-                        // Hide ghost after 3 seconds and show thank you
+                        // Hide ghost after 4 seconds and show thank you
                         setTimeout(() => {
                             ghostImage.style.display = 'none';
                             normalThankYou.style.display = 'block';
                             document.body.style.animation = '';
-                        }, 3000);
-                    }, 1000);
+                            screamSound.pause();
+                        }, 4000);
+                    }, 800);
                     
                     // Reset form
                     this.reset();
