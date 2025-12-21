@@ -1,8 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+// Store in memory (temporary solution)
+let surveyData = {
+  responses: [],
+  totalResponses: 0
+};
 
 module.exports = async (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -27,7 +29,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Validate that all answers are between 1-5
+    // Validate answers
     for (let i = 1; i <= 10; i++) {
       const answer = answers[`q${i}`];
       if (!answer || answer < 1 || answer > 5) {
@@ -38,29 +40,15 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Read existing data
-    const dataPath = path.join(process.cwd(), 'data', 'survey-responses.json');
-    let data = { responses: [], totalResponses: 0 };
-    
-    if (fs.existsSync(dataPath)) {
-      const fileContent = fs.readFileSync(dataPath, 'utf8');
-      if (fileContent) {
-        data = JSON.parse(fileContent);
-      }
-    }
-
-    // Add new response
+    // Add new response (in memory)
     const newResponse = {
-      id: data.totalResponses + 1,
+      id: surveyData.totalResponses + 1,
       timestamp: new Date().toISOString(),
       answers: answers
     };
 
-    data.responses.push(newResponse);
-    data.totalResponses = data.responses.length;
-
-    // Save data
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+    surveyData.responses.push(newResponse);
+    surveyData.totalResponses = surveyData.responses.length;
 
     return res.status(200).json({ 
       success: true, 

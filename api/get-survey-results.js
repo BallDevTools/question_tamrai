@@ -1,8 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+// Use same memory storage
+let surveyData = {
+  responses: [],
+  totalResponses: 0
+};
 
 module.exports = async (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -18,59 +20,46 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const dataPath = path.join(process.cwd(), 'data', 'survey-responses.json');
-    
-    // Check if file exists
-    if (!fs.existsSync(dataPath)) {
-      return res.status(200).json({
-        success: true,
-        results: {
-          totalResponses: 0,
-          questions: []
-        }
-      });
-    }
-
-    // Read data
-    const fileContent = fs.readFileSync(dataPath, 'utf8');
-    const data = JSON.parse(fileContent);
-
-    // Calculate statistics for each question
     const questions = [];
+    let totalAverage = 0;
     
     for (let i = 1; i <= 10; i++) {
       const questionKey = `q${i}`;
-      const starCounts = {
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0
-      };
+      const ratings = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
-      // Count stars for this question
-      data.responses.forEach(response => {
+      surveyData.responses.forEach(response => {
         const rating = response.answers[questionKey];
         if (rating >= 1 && rating <= 5) {
-          starCounts[rating]++;
+          ratings[rating]++;
         }
       });
 
-      // Calculate average
       let totalStars = 0;
       let totalVotes = 0;
       
       for (let star = 1; star <= 5; star++) {
-        totalStars += star * starCounts[star];
-        totalVotes += starCounts[star];
+        totalStars += star * ratings[star];
+        totalVotes += ratings[star];
       }
 
-      const average = totalVotes > 0 ? (totalStars / totalVotes).toFixed(2) : 0;
+      const average = totalVotes > 0 ? totalStars / totalVotes : 0;
+      totalAverage += average;
+
+      // Calculate median
+      const allRatings = [];
+      for (let star = 1; star <= 5; star++) {
+        for (let j = 0; j < ratings[star]; j++) {
+          allRatings.push(star);
+        }
+      }
+      allRatings.sort((a, b) => a - b);
+      const median = allRatings.length > 0 ? allRatings[Math.floor(allRatings.length / 2)] : 0;
 
       questions.push({
         questionNumber: i,
-        starCounts: starCounts,
-        average: parseFloat(average),
+        ratings: ratings,
+        average: parseFloat(average.toFixed(2)),
+        median: median,
         totalVotes: totalVotes
       });
     }
@@ -78,8 +67,9 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       results: {
-        totalResponses: data.totalResponses,
-        lastUpdate: data.responses.length > 0 ? data.responses[data.responses.length - 1].timestamp : null,
+        totalResponses: surveyData.totalResponses,
+        overallAverage: totalAverage / 10,
+        lastUpdate: surveyData.responses.length > 0 ? surveyData.responses[surveyData.responses.length - 1].timestamp : null,
         questions: questions
       }
     });
