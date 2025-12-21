@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/api/submit-survey",
@@ -18,18 +11,6 @@
     {
       "src": "/api/export-csv",
       "dest": "/api/export-csv.js"
-    },
-    {
-      "src": "/survey-form.html",
-      "dest": "/survey-form.html"
-    },
-    {
-      "src": "/admin-report.html",
-      "dest": "/admin-report.html"
-    },
-    {
-      "src": "/",
-      "dest": "/survey-form.html"
     }
   ]
 }
