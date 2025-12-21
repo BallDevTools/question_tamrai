@@ -11,35 +11,16 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const REPO_OWNER = 'BallDevTools'; // เปลี่ยนเป็นชื่อ GitHub ของคุณ
-    const REPO_NAME = 'question_tamrai'; // ชื่อ repo
-    const FILE_PATH = 'data/survey-responses.json';
+    const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
+    const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
 
-    const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-    
-    const response = await fetch(getFileUrl, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
       headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
+        'X-Master-Key': JSONBIN_API_KEY
       }
     });
 
-    if (!response.ok) {
-      return res.status(200).json({
-        success: true,
-        results: {
-          totalResponses: 0,
-          overallAverage: 0,
-          lastUpdate: null,
-          questions: []
-        }
-      });
-    }
-
-    const fileData = await response.json();
-    const content = Buffer.from(fileData.content, 'base64').toString('utf8');
-    const data = JSON.parse(content);
+    const { record: data } = await response.json();
 
     if (!data.responses || data.responses.length === 0) {
       return res.status(200).json({

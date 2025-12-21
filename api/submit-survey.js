@@ -13,13 +13,12 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
+    return res.status(405).json({ success: false });
   }
 
   try {
     const { answers } = req.body;
 
-    // Validate
     if (!answers || Object.keys(answers).length !== 10) {
       return res.status(400).json({ 
         success: false, 
@@ -27,44 +26,17 @@ module.exports = async (req, res) => {
       });
     }
 
-    for (let i = 1; i <= 10; i++) {
-      const answer = answers[`q${i}`];
-      if (!answer || answer < 1 || answer > 5) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'กรุณาให้คะแนนระหว่าง 1-5 ดาว' 
-        });
+    const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
+    const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
+
+    // Get current data
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: {
+        'X-Master-Key': JSONBIN_API_KEY
       }
-    }
+    });
 
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const REPO_OWNER = 'BallDevTools'; // เปลี่ยนเป็นชื่อ GitHub ของคุณ
-    const REPO_NAME = 'question_tamrai'; // ชื่อ repo
-    const FILE_PATH = 'data/survey-responses.json';
-
-    // Get current file
-    const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-    
-    let currentData = { responses: [], totalResponses: 0 };
-    let fileSha = null;
-
-    try {
-      const getResponse = await fetch(getFileUrl, {
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
-      if (getResponse.ok) {
-        const fileData = await getResponse.json();
-        fileSha = fileData.sha;
-        const content = Buffer.from(fileData.content, 'base64').toString('utf8');
-        currentData = JSON.parse(content);
-      }
-    } catch (error) {
-      console.log('File not found, will create new one');
-    }
+    const { record: currentData } = await getResponse.json();
 
     // Add new response
     const newResponse = {
@@ -76,28 +48,15 @@ module.exports = async (req, res) => {
     currentData.responses.push(newResponse);
     currentData.totalResponses = currentData.responses.length;
 
-    // Update file
-    const content = Buffer.from(JSON.stringify(currentData, null, 2)).toString('base64');
-    
-    const updateUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-    const updateResponse = await fetch(updateUrl, {
+    // Update data
+    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_API_KEY
       },
-      body: JSON.stringify({
-        message: `Add survey response #${newResponse.id}`,
-        content: content,
-        sha: fileSha,
-        branch: 'main'
-      })
+      body: JSON.stringify(currentData)
     });
-
-    if (!updateResponse.ok) {
-      throw new Error('Failed to update file');
-    }
 
     return res.status(200).json({ 
       success: true, 
