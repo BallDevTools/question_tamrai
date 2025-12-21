@@ -3,23 +3,56 @@ let surveyData = {
   responses: [],
   totalResponses: 0
 };
-
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+  
   if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
+    return res.status(405).json({ success: false });
   }
 
   try {
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const REPO_OWNER = 'BallDevTools'; // เปลี่ยนเป็นชื่อ GitHub ของคุณ
+    const REPO_NAME = 'question_tamrai'; // ชื่อ repo
+    const FILE_PATH = 'data/survey-responses.json';
+
+    const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    
+    const response = await fetch(getFileUrl, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(200).json({
+        success: true,
+        results: {
+          totalResponses: 0,
+          overallAverage: 0,
+          lastUpdate: null,
+          questions: []
+        }
+      });
+    }
+
+    const fileData = await response.json();
+    const content = Buffer.from(fileData.content, 'base64').toString('utf8');
+    const data = JSON.parse(content);
+
+    if (!data.responses || data.responses.length === 0) {
+      return res.status(200).json({
+        success: true,
+        results: {
+          totalResponses: 0,
+          overallAverage: 0,
+          lastUpdate: null,
+          questions: []
+        }
+      });
+    }
+
     const questions = [];
     let totalAverage = 0;
     
@@ -27,7 +60,7 @@ module.exports = async (req, res) => {
       const questionKey = `q${i}`;
       const ratings = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
-      surveyData.responses.forEach(response => {
+      data.responses.forEach(response => {
         const rating = response.answers[questionKey];
         if (rating >= 1 && rating <= 5) {
           ratings[rating]++;
@@ -45,7 +78,6 @@ module.exports = async (req, res) => {
       const average = totalVotes > 0 ? totalStars / totalVotes : 0;
       totalAverage += average;
 
-      // Calculate median
       const allRatings = [];
       for (let star = 1; star <= 5; star++) {
         for (let j = 0; j < ratings[star]; j++) {
@@ -67,18 +99,18 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       results: {
-        totalResponses: surveyData.totalResponses,
-        overallAverage: totalAverage / 10,
-        lastUpdate: surveyData.responses.length > 0 ? surveyData.responses[surveyData.responses.length - 1].timestamp : null,
+        totalResponses: data.totalResponses,
+        overallAverage: parseFloat((totalAverage / 10).toFixed(2)),
+        lastUpdate: data.responses[data.responses.length - 1].timestamp,
         questions: questions
       }
     });
 
   } catch (error) {
-    console.error('Error reading survey results:', error);
+    console.error('Error:', error);
     return res.status(500).json({
       success: false,
-      message: 'เกิดข้อผิดพลาดในการดึงข้อมูล'
+      message: 'เกิดข้อผิดพลาด: ' + error.message
     });
   }
 };
