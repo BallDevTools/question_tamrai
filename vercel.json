@@ -20,10 +20,6 @@
       "dest": "/api/export-csv.js"
     },
     {
-      "src": "/admin",
-      "dest": "/admin-report.html"
-    },
-    {
       "src": "/",
       "dest": "/survey-form.html"
     }
