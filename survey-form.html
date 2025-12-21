@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สอบถามแอพหาเพื่อน</title>
+    <title>แบบสำรวจความคิดเห็น</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -126,25 +126,12 @@
             color: #667eea;
             margin: 20px 0;
         }
-        
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            10% { transform: translate(-10px, -10px) rotate(-2deg); }
-            20% { transform: translate(10px, 10px) rotate(2deg); }
-            30% { transform: translate(-10px, 10px) rotate(-2deg); }
-            40% { transform: translate(10px, -10px) rotate(2deg); }
-            50% { transform: translate(-10px, -10px) rotate(-2deg); }
-            60% { transform: translate(10px, 10px) rotate(2deg); }
-            70% { transform: translate(-10px, 10px) rotate(-2deg); }
-            80% { transform: translate(10px, -10px) rotate(2deg); }
-            90% { transform: translate(-10px, -10px) rotate(-2deg); }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="survey-container">
-            <h1 class="survey-title text-center">สอบถามแอพหาเพื่อน</h1>
+            <h1 class="survey-title text-center">แบบสำรวจความคิดเห็น</h1>
             <p class="survey-subtitle text-center">กรุณาให้คะแนนความคิดเห็นของคุณในแต่ละหัวข้อ (1-5 ดาว)</p>
             
             <form id="surveyForm">
@@ -285,31 +272,23 @@
         </div>
     </div>
 
-    <!-- Jumpscare Modal -->
-    <div class="modal fade" id="thankYouModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
-            <div class="modal-content" style="background: black; border: none;">
-                <div class="modal-body p-0 position-relative" style="overflow: hidden;">
-                    <!-- Ghost Image (will appear suddenly) -->
-                    <img id="ghostImage" src="https://question-tamrai.vercel.app/jumpscare.gif" 
-                         style="display: none; width: 100%; height: 100vh; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 9999; background: black;"
-                         alt="ghost">
-                    
-                    <!-- Scary Scream Sound -->
-                    <audio id="screamSound" preload="auto" volume="1.0">
-                        <source src="https://www.myinstants.com/media/sounds/scary-scream-sound-effect.mp3" type="audio/mpeg">
-                        <source src="https://www.soundjay.com/human/sounds/scream-6.mp3" type="audio/mpeg">
-                    </audio>
-                    
-                    <!-- Normal Thank You (shows after jumpscare) -->
-                    <div id="normalThankYou" style="display: none; padding: 60px; text-align: center; color: white;">
-                        <div style="font-size: 5rem; color: #667eea; margin-bottom: 30px;">
-                            <i class="fas fa-ghost"></i>
-                        </div>
-                        <h2 style="color: white; margin-bottom: 20px;">ขอบคุณที่ตอบแบบสอบถาม! 😈</h2>
-                        <p style="color: #ccc; font-size: 1.2rem;">แค่หลอกเล่นนะ ฮ่าๆ</p>
-                        <button type="button" class="btn btn-light btn-lg mt-4" data-bs-dismiss="modal">ปิด</button>
+    <!-- Thank You Modal -->
+    <div class="modal fade" id="thankYouModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">ขอบคุณสำหรับความคิดเห็น!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="thank-you-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
+                    <h4>ส่งข้อมูลเรียบร้อยแล้ว!</h4>
+                    <p class="text-muted">ขอบคุณที่สละเวลาตอบแบบสำรวจของเรา</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">ปิด</button>
                 </div>
             </div>
         </div>
@@ -319,10 +298,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Preload ghost image
-        const preloadGhost = new Image();
-        preloadGhost.src = 'https://question-tamrai.vercel.app/jumpscare.gif';
-        
         // Star Rating System
         document.querySelectorAll('.star-rating').forEach(rating => {
             const stars = rating.querySelectorAll('.star');
@@ -414,46 +389,9 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Show jumpscare modal
+                    // Show thank you modal
                     const modal = new bootstrap.Modal(document.getElementById('thankYouModal'));
-                    const ghostImage = document.getElementById('ghostImage');
-                    const screamSound = document.getElementById('screamSound');
-                    const normalThankYou = document.getElementById('normalThankYou');
-                    
                     modal.show();
-                    
-                    // Make sure ghost is ready
-                    ghostImage.style.display = 'none';
-                    normalThankYou.style.display = 'none';
-                    
-                    // Trigger jumpscare after short delay
-                    setTimeout(() => {
-                        // Set volume to max
-                        screamSound.volume = 1.0;
-                        
-                        // Show ghost - FORCE display
-                        ghostImage.style.cssText = 'display: block !important; width: 100%; height: 100vh; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 9999; background: black;';
-                        
-                        // Play scream
-                        screamSound.play().catch(e => {
-                            console.log('Audio play failed:', e);
-                            // Try to play again with user interaction
-                            document.body.click();
-                            screamSound.play();
-                        });
-                        
-                        // Shake effect
-                        document.body.style.animation = 'shake 0.5s infinite';
-                        
-                        // Hide ghost after 4 seconds and show thank you
-                        setTimeout(() => {
-                            ghostImage.style.display = 'none';
-                            normalThankYou.style.display = 'block';
-                            document.body.style.animation = '';
-                            screamSound.pause();
-                            screamSound.currentTime = 0;
-                        }, 4000);
-                    }, 500);
                     
                     // Reset form
                     this.reset();
