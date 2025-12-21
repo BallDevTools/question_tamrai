@@ -1,26 +1,48 @@
-// Use same memory storage
-let surveyData = {
-  responses: [],
-  totalResponses: 0
-};
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'GET') {
-    return res.status(405).json({ success: false });
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
   try {
-    const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
-    const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const REPO_OWNER = 'BallDevTools'; // เปลี่ยนเป็นชื่อ GitHub ของคุณ
+    const REPO_NAME = 'question_tamrai'; // ชื่อ repo
+    const FILE_PATH = 'data/survey-responses.json';
 
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+    const getFileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    
+    const response = await fetch(getFileUrl, {
       headers: {
-        'X-Master-Key': JSONBIN_API_KEY
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
       }
     });
 
-    const { record: data } = await response.json();
+    if (!response.ok) {
+      return res.status(200).json({
+        success: true,
+        results: {
+          totalResponses: 0,
+          overallAverage: 0,
+          lastUpdate: null,
+          questions: []
+        }
+      });
+    }
+
+    const fileData = await response.json();
+    const content = Buffer.from(fileData.content, 'base64').toString('utf8');
+    const data = JSON.parse(content);
 
     if (!data.responses || data.responses.length === 0) {
       return res.status(200).json({
@@ -59,6 +81,7 @@ module.exports = async (req, res) => {
       const average = totalVotes > 0 ? totalStars / totalVotes : 0;
       totalAverage += average;
 
+      // Calculate median
       const allRatings = [];
       for (let star = 1; star <= 5; star++) {
         for (let j = 0; j < ratings[star]; j++) {
@@ -88,10 +111,10 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error reading survey results:', error);
     return res.status(500).json({
       success: false,
-      message: 'เกิดข้อผิดพลาด: ' + error.message
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error.message
     });
   }
 };

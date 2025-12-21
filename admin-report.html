@@ -159,6 +159,18 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -177,30 +189,39 @@
                 </div>
             </div>
 
-            <!-- Overall Stats -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <h3 id="totalResponses">0</h3>
-                        <p><i class="fas fa-users"></i> จำนวนผู้ตอบทั้งหมด</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <h3 id="avgRating">0.0</h3>
-                        <p><i class="fas fa-star"></i> คะแนนเฉลี่ยทั้งหมด</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <h3 id="lastUpdate">-</h3>
-                        <p><i class="fas fa-clock"></i> อัพเดทล่าสุด</p>
-                    </div>
-                </div>
+            <div id="loadingDiv" class="loading">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>กำลังโหลดข้อมูล...</p>
             </div>
 
-            <!-- Questions Reports -->
-            <div id="questionsReport"></div>
+            <div id="errorDiv" class="error-message" style="display: none;"></div>
+
+            <!-- Overall Stats -->
+            <div id="statsSection" style="display: none;">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3 id="totalResponses">0</h3>
+                            <p><i class="fas fa-users"></i> จำนวนผู้ตอบทั้งหมด</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3 id="avgRating">0.0</h3>
+                            <p><i class="fas fa-star"></i> คะแนนเฉลี่ยทั้งหมด</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3 id="lastUpdate">-</h3>
+                            <p><i class="fas fa-clock"></i> อัพเดทล่าสุด</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Reports -->
+                <div id="questionsReport"></div>
+            </div>
         </div>
     </div>
 
@@ -209,9 +230,9 @@
         const questions = [
             "คิดว่าราคา 59 บาทคุ้มค่าไหม",
             "คิดว่าจำนวนผู้ใช้ในแอพสำคัญต่อการตัดสินใจที่จะสมัครแอพไหม",
-            "คิดว่าระบบยืนยันตัวตนผู้ใช้ (เช่น ยืนยันด้วยเบอร์โทร, รูปถ่ายตัวเอง) มีความสำคัญมากน้อยแค่ไหนในการหาคู่",
-            "คุณคิดว่าระบบจับคู่ที่เน้นความสนใจและงานอดิเรกเฉพาะทาง มีความสำคัญมากน้อยเพียงใด",
-            "คุณคิดว่าระบบรีวิวและให้คะแนนผู้ใช้/กิจกรรม มีความสำคัญมากน้อยเพียงใด?",
+            "คิดว่าระบบยืนยันตัวตนผู้ใช้มีความสำคัญมากน้อยแค่ไหนในการหาคู่",
+            "คุณคิดว่าระบบจับคู่ที่เน้นความสนใจและงานอดิเรกเฉพาะทางมีความสำคัญมากน้อยเพียงใด",
+            "คุณคิดว่าระบบรีวิวและให้คะแนนผู้ใช้/กิจกรรมมีความสำคัญมากน้อยเพียงใด?",
             "ความปลอดภัยข้อมูลของผู้ใช้สำคัญมากน้อยแค่ไหน",
             "คุณคิดว่าการมีผู้ดูแลที่คอยตรวจสอบเนื้อหาและพฤติกรรมที่ไม่เหมาะสมมีความสำคัญมากไหม",
             "ฟีเจอร์ในการส่งข้อความเพื่อเปิดบทสนทนามีความสำคัญมากน้อยแค่ไหน",
@@ -221,42 +242,73 @@
 
         async function loadReportData() {
             try {
+                document.getElementById('loadingDiv').style.display = 'block';
+                document.getElementById('errorDiv').style.display = 'none';
+                document.getElementById('statsSection').style.display = 'none';
+
                 const response = await fetch('/api/get-survey-results');
                 const data = await response.json();
+                
+                console.log('API Response:', data); // Debug
                 
                 if (data.success) {
                     displayReport(data.results);
                 } else {
-                    console.error('Failed to load data');
+                    showError('ไม่สามารถโหลดข้อมูลได้: ' + (data.message || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error loading report:', error);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+            } finally {
+                document.getElementById('loadingDiv').style.display = 'none';
             }
         }
 
+        function showError(message) {
+            const errorDiv = document.getElementById('errorDiv');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
         function displayReport(results) {
+            document.getElementById('statsSection').style.display = 'block';
+            
             // Update overall stats
-            document.getElementById('totalResponses').textContent = results.totalResponses;
-            document.getElementById('avgRating').textContent = results.overallAverage.toFixed(2);
+            document.getElementById('totalResponses').textContent = results.totalResponses || 0;
+            document.getElementById('avgRating').textContent = results.overallAverage ? results.overallAverage.toFixed(2) : '0.00';
             
             if (results.lastUpdate) {
                 const date = new Date(results.lastUpdate);
-                document.getElementById('lastUpdate').textContent = date.toLocaleString('th-TH');
+                document.getElementById('lastUpdate').textContent = date.toLocaleString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                document.getElementById('lastUpdate').textContent = '-';
             }
 
             // Generate questions report
             const reportContainer = document.getElementById('questionsReport');
             reportContainer.innerHTML = '';
 
+            if (!results.questions || results.questions.length === 0) {
+                reportContainer.innerHTML = '<div class="alert alert-info">ยังไม่มีข้อมูลการตอบแบบสำรวจ</div>';
+                return;
+            }
+
             results.questions.forEach((questionData, index) => {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'question-report';
                 
-                const totalVotes = Object.values(questionData.ratings).reduce((a, b) => a + b, 0);
+                const totalVotes = questionData.totalVotes || 0;
+                const ratings = questionData.ratings || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
                 
                 let ratingBarsHTML = '';
                 for (let rating = 5; rating >= 1; rating--) {
-                    const count = questionData.ratings[rating] || 0;
+                    const count = ratings[rating] || 0;
                     const percentage = totalVotes > 0 ? (count / totalVotes * 100).toFixed(1) : 0;
                     
                     ratingBarsHTML += `
@@ -285,7 +337,7 @@
                     <div class="summary-stats">
                         <div class="stat-box">
                             <div class="label">คะแนนเฉลี่ย</div>
-                            <div class="value">${questionData.average.toFixed(2)}</div>
+                            <div class="value">${questionData.average ? questionData.average.toFixed(2) : '0.00'}</div>
                         </div>
                         <div class="stat-box">
                             <div class="label">จำนวนคนตอบ</div>
@@ -293,7 +345,7 @@
                         </div>
                         <div class="stat-box">
                             <div class="label">ค่ามัธยฐาน</div>
-                            <div class="value">${questionData.median}</div>
+                            <div class="value">${questionData.median || 0}</div>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -305,7 +357,7 @@
                 
                 // Create chart
                 setTimeout(() => {
-                    createChart(`chart-q${index + 1}`, questionData.ratings);
+                    createChart(`chart-q${index + 1}`, ratings);
                 }, 100);
             });
         }
@@ -365,19 +417,7 @@
         }
 
         function exportToCSV() {
-            fetch('/api/export-csv')
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `survey-results-${new Date().toISOString().split('T')[0]}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                })
-                .catch(error => console.error('Error exporting CSV:', error));
+            window.location.href = '/api/export-csv';
         }
 
         // Load data on page load
