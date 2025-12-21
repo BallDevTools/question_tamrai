@@ -1,0 +1,21 @@
+{
+  "name": "survey-form",
+  "version": "1.0.0",
+  "description": "Survey form with star ratings and admin reporting",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "survey",
+    "rating",
+    "bootstrap"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}
