@@ -291,14 +291,14 @@
             <div class="modal-content" style="background: black; border: none;">
                 <div class="modal-body p-0 position-relative" style="overflow: hidden;">
                     <!-- Ghost Image (will appear suddenly) -->
-                    <img id="ghostImage" src="https://media.vlipsy.com/vlips/3hEsFXt9/preview.jpg" 
+                    <img id="ghostImage" src="https://i.imgur.com/wqVzriU.gif" 
                          style="display: none; width: 100%; height: 100vh; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 9999; background: black;"
                          alt="ghost">
                     
                     <!-- Scary Scream Sound -->
                     <audio id="screamSound" preload="auto" volume="1.0">
-                        <source src="https://media.vlipsy.com/vlips/3hEsFXt9/audio.mp3" type="audio/mpeg">
-                        <source src="https://www.myinstants.com/media/sounds/female-scream.mp3" type="audio/mpeg">
+                        <source src="https://www.myinstants.com/media/sounds/scary-scream-sound-effect.mp3" type="audio/mpeg">
+                        <source src="https://www.soundjay.com/human/sounds/scream-6.mp3" type="audio/mpeg">
                     </audio>
                     
                     <!-- Normal Thank You (shows after jumpscare) -->
@@ -321,7 +321,7 @@
     <script>
         // Preload ghost image
         const preloadGhost = new Image();
-        preloadGhost.src = 'https://media.vlipsy.com/vlips/3hEsFXt9/preview.jpg';
+        preloadGhost.src = 'https://i.imgur.com/wqVzriU.gif';
         
         // Star Rating System
         document.querySelectorAll('.star-rating').forEach(rating => {
