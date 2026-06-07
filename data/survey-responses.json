@@ -1,21 +1,4 @@
 {
-  "responses": [
-    {
-      "id": 1,
-      "timestamp": "2026-06-07T14:27:30.786Z",
-      "answers": {
-        "q1": 4,
-        "q2": 4,
-        "q3": 4,
-        "q4": 4,
-        "q5": 4,
-        "q6": 4,
-        "q7": 4,
-        "q8": 4,
-        "q9": 4,
-        "q10": 4
-      }
-    }
-  ],
-  "totalResponses": 1
+  "responses": [],
+  "totalResponses": 0
 }
